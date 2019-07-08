@@ -9,9 +9,10 @@ import io.blue.config.Config
 import io.blue.connector._
 import io.blue.core.producer._
 
+import com.typesafe.scalalogging._
 import akka.actor.{Actor, ActorSystem, Props, ActorRef}
 
-class Supervisor extends Actor {
+class Supervisor extends Actor with LazyLogging {
 
   var options: Options = _
   var sourceMetadata: Metadata = _
@@ -27,7 +28,7 @@ class Supervisor extends Actor {
     case SinkDone(index: Int) => onSinkDone(index)
     case message: CheckProgress => onCheckProgress
     case start: Start => run
-    case _ => println("Supervisor: huh?")
+    case _ => logger.error("Unknown message!")
   }
 
   def getMetadata(table: String, connector: Connector): Metadata = {
@@ -41,6 +42,7 @@ class Supervisor extends Actor {
   }
 
   def init(options: Options) {
+    logger.trace("Initializing options...")
     this.options = options
     sourceConnector = options.config.getSourceConnector(options.cli.source)
     targetConnector = options.config.getTargetConnector(options.cli.target)
@@ -49,13 +51,16 @@ class Supervisor extends Actor {
     if (sourceConnector.isInstanceOf[OracleRowidConnector]) {
       options.sourceParallel = sourceMetadata.asInstanceOf[OracleRowidSourceMetadata].ranges.length
     }
+    logger.trace("Options initialized")
   }
 
   def broadcastProducersDone {
+    logger.trace("Broadcasting done message to all sinks...")
     sinks.values.map(_._1).foreach(_ ! ProducersDone())
   }
 
   def onProducerDone(index: Int) {
+    logger.trace(s"Producer ${index} is done")
     val (producer, _) =  producers(index)
     producers += (index -> (producer, Status.Done))
     if (isProducersDone) {
@@ -65,6 +70,7 @@ class Supervisor extends Actor {
   }
 
   def onSinkDone(index: Int) {
+    logger.trace(s"Sink ${index} is done")
     val (sink, _) =  sinks(index)
     sinks += (index -> (sink, Status.Done))
     self ! CheckProgress()
@@ -87,7 +93,8 @@ class Supervisor extends Actor {
   }
 
   def initProducers {
-    // can not parallize all connectors
+    logger.trace(s"Initializing producers")
+    // can not parallize all producers
     sourceConnector match {
       case c: OracleRowidConnector =>
         for (i <- 1 to options.sourceParallel) {
@@ -101,6 +108,8 @@ class Supervisor extends Actor {
   }
 
   def initSinks {
+    logger.trace(s"Initializing sinks")
+
     targetConnector match {
       case c: JdbcConnector =>
         if(options.cli.truncate) {
