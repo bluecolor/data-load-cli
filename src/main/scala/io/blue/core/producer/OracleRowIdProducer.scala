@@ -17,7 +17,17 @@ class OracleRowidProducer extends Actor with LazyLogging {
   var ranges: (String, String) = _
   var filter: String = _
   var columns: List[Column] = List()
-  var sink: ActorRef = _
+  var sinks: List[ActorRef] = List()
+
+  var sinkIndex: Int = -1
+
+  def nextSink: ActorRef = {
+    sinkIndex += 1
+    if (sinkIndex == sinks.length) {
+      sinkIndex = 0
+    }
+    sinks(sinkIndex)
+  }
 
   def receive = {
     case message: OracleRowidProducerParams => setParams(message)
@@ -35,7 +45,7 @@ class OracleRowidProducer extends Actor with LazyLogging {
   }
 
   def registerSink(message: RegisterSink) {
-    sink = message.sink
+    sinks ::= message.sink
   }
 
   def getQuery: String = {
@@ -56,11 +66,10 @@ class OracleRowidProducer extends Actor with LazyLogging {
     val rs = connection.createStatement.executeQuery(query)
     var count = 0
     while (rs.next) {
-      sink ! Record((1 to rs.getMetaData.getColumnCount).map(rs.getObject(_)).toList)
+      nextSink ! Record((1 to rs.getMetaData.getColumnCount).map(rs.getObject(_)).toList)
       count += 1
     }
-
-    sink ! ProducerDone(index)
     context.parent ! ProducerDone(index)
   }
+
 }

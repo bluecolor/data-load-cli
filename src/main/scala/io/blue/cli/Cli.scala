@@ -27,7 +27,13 @@ class Cli {
   var target: String = _
 
   @Option(names = Array("-p", "--parallel"), description = Array("number of parallel transfer jobs"))
-  var parallel: Int = _
+  var parallel: Integer = _
+
+  @Option(names = Array("--source_parallel"), description = Array("number of parallel source jobs"))
+  var sourceParallel: Integer = _
+
+  @Option(names = Array("--target_parallel"), description = Array("number of parallel target jobs"))
+  var targetParallel: Integer = _
 
   @Option(names = Array("-a", "--source_table"), description = Array("Source table to name"))
   var sourceTable: String = _

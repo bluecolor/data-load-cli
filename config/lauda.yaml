@@ -9,9 +9,17 @@ connectors:
       username: lauda
       password: lauda
       driver_class: oracle.jdbc.driver.OracleDriver
+      parallel: 4
   target:
     - name: file_1
       type: FILE
       path: /home/ceyhun/projects/lab/lauda/demo
       field_delimiter: ";"
       record_seperator: "\n"
+      parallel: 4
+    - name: jdbc_1
+      type: JDBC
+      url: jdbc:oracle:thin:@localhost:1530/orcl
+      username: lauda
+      password: lauda
+      driver_class: oracle.jdbc.driver.OracleDriver

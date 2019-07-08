@@ -11,14 +11,12 @@ class FileSink extends Actor {
 
   var index: Int = _
   var connector: FileConnector = _
-  var metadata: Metadata = _
   var writer: BufferedWriter = _
 
   def receive = {
-    case message: ProducerDone => onProducerDone
+    case message: ProducersDone => onProducersDone
     case connector: FileConnector => setConnector(connector)
     case params: FileSinkParams => setParams(params)
-    case metadata: Metadata => registerMetadata(metadata)
     case Record(data: List[Object]) => write(data)
     case _  => println("FileSink: huh?")
   }
@@ -30,15 +28,9 @@ class FileSink extends Actor {
   def setParams(params: FileSinkParams) {
     this.connector = params.connector
     this.index = params.index
-    var fw = new FileWriter(s"${connector.path}/${index}.txt")
-		this.writer = new BufferedWriter(fw)
   }
 
-  def registerMetadata(metadata: Metadata) {
-    this.metadata = metadata
-  }
-
-  def onProducerDone {
+  def onProducersDone {
     this.writer.flush
     this.writer.close
     context.parent ! SinkDone(index)

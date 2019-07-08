@@ -15,6 +15,7 @@ class Supervisor extends Actor {
 
   var options: Options = _
   var sourceMetadata: Metadata = _
+  var targetMetadata: Metadata = _
   var sourceConnector: Connector = _
   var targetConnector: Connector = _
   var producers: Map[Int, (ActorRef, Status.Value)] = Map()
@@ -29,25 +30,37 @@ class Supervisor extends Actor {
     case _ => println("Supervisor: huh?")
   }
 
+  def getMetadata(table: String, connector: Connector): Metadata = {
+    connector match {
+      case c: OracleRowidConnector =>
+        c.getMetadata(table, options.cli.parallel)
+      case c: JdbcConnector =>
+        c.getMetadata(table)
+      case _ => new Metadata
+    }
+  }
+
   def init(options: Options) {
     this.options = options
     sourceConnector = options.config.getSourceConnector(options.cli.source)
     targetConnector = options.config.getTargetConnector(options.cli.target)
-    sourceMetadata = sourceConnector match {
-      case c: OracleRowidConnector =>
-        c.getMetadata(options.cli.sourceTable, options.cli.parallel)
-      case c: JdbcConnector =>
-        c.getMetadata(options.cli.sourceTable)
-      case _ => new Metadata()
-    }
+    sourceMetadata = getMetadata(options.cli.sourceTable, sourceConnector)
+    targetMetadata = getMetadata(options.cli.targetTable, targetConnector)
     if (sourceConnector.isInstanceOf[OracleRowidConnector]) {
       options.parallel = sourceMetadata.asInstanceOf[OracleRowidSourceMetadata].ranges.length
     }
   }
 
+  def broadcastProducersDone {
+    sinks.values.map(_._1).foreach(_ ! ProducersDone())
+  }
+
   def onProducerDone(index: Int) {
     val (producer, _) =  producers(index)
     producers += (index -> (producer, Status.Done))
+    if (isProducersDone) {
+      broadcastProducersDone
+    }
     self ! CheckProgress()
   }
 
@@ -73,32 +86,58 @@ class Supervisor extends Actor {
     }
   }
 
-  def run {
-    for (i <- 1 to options.parallel) {
-      var producer: ActorRef = null
-      var sink: ActorRef = null
-
-      sourceConnector match {
-        case c: OracleRowidConnector =>
-          producer = context.actorOf(Props[OracleRowidProducer], name = s"OracleRowidProducer_${i}")
+  def initProducers {
+    // can not parallize all connectors
+    sourceConnector match {
+      case c: OracleRowidConnector =>
+        for (i <- 1 to options.sourceParallel) {
+          val producer = context.actorOf(Props[OracleRowidProducer], name = s"OracleRowidProducer_${i}")
           producers += (i -> (producer, Status.Ready))
           val rowidRange = sourceMetadata.asInstanceOf[OracleRowidSourceMetadata].ranges(i-1)
           val params = OracleRowidProducerParams(i, options.cli.sourceTable, rowidRange, sourceMetadata.columns, c)
           producer ! params
-      }
+        }
+    }
+  }
 
+  def initSinks {
+    for (i <- 1 to options.targetParallel) {
       targetConnector match {
         case c: FileConnector =>
-          sink = context.actorOf(Props[FileSink], name = s"FileSink_${i}")
+          val sink = context.actorOf(Props[FileSink], name = s"FileSink_${i}")
           sinks += (i -> (sink, Status.Ready))
           val params = FileSinkParams(i, c)
           sink ! params
+        case c: JdbcConnector =>
+          val sink = context.actorOf(Props[JdbcSink], name = s"JdbcSink_${i}")
+          sinks += (i -> (sink, Status.Ready))
+          val params = JdbcSinkParams(i, targetMetadata, c)
+          sink ! params
       }
-
-      producer ! RegisterSink(sink)
-      producer ! StartProducer()
-      producers += (i -> (producer, Status.Running))
-      sinks += (i -> (sink, Status.Running))
     }
   }
+
+  def registerSinks {
+    producers.values.map(_._1).foreach { producer =>
+      sinks.values.map(_._1).foreach { sink =>
+        producer ! RegisterSink(sink)
+      }
+    }
+  }
+
+  def startProducers {
+    for ((producer, i) <- producers.values.map(_._1).zipWithIndex) {
+      producer ! StartProducer()
+      producers += (i+1 -> (producer, Status.Running))
+      sinks += (i+1 -> (sinks(i+1)._1, Status.Running))
+    }
+  }
+
+  def run {
+    initProducers
+    initSinks
+    registerSinks
+    startProducers
+  }
+
 }

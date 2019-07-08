@@ -24,10 +24,12 @@ object Config extends LazyLogging{
     logger.trace("Parsing config [connectors]")
     connectors.asInstanceOf[java.util.List[java.util.Map[String, Object]]].asScala.toList.map{ connector =>
       val connectorName = connector.get("name").toString
+      val parallel = connector.get("parallel").asInstanceOf[Int]
       connector.get("type").toString.toUpperCase match {
         case ConnectorType.ORACLE_ROWID =>
           var c = new OracleRowidConnector
           c.name = connectorName
+          c.parallel = parallel
           c.connectorType = ConnectorType.ORACLE_ROWID
           c.url = connector.get("url").toString
           c.username = connector.get("username").toString
@@ -36,6 +38,7 @@ object Config extends LazyLogging{
           c
         case ConnectorType.JDBC =>
           var c = new JdbcConnector
+          c.parallel = parallel
           c.name = connectorName
           c.url = connector.get("url").toString
           c.username = connector.get("username").toString
@@ -43,6 +46,7 @@ object Config extends LazyLogging{
           c
         case ConnectorType.FILE =>
           var c = new FileConnector
+          c.parallel = parallel
           c.name = connectorName
           c.path = connector.get("path").toString
           c.fieldDelimiter = connector.get("field_delimiter").toString

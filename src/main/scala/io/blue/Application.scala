@@ -50,6 +50,5 @@ object Application extends App with LazyLogging {
 
   supervisor ! Start()
   Await.ready(system.whenTerminated, 1.days)
-
 }
 
