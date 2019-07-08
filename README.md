@@ -1,7 +1,7 @@
 
 Lauda parallel data load utility
 
-```sh
+```
 lauda [-h] [--truncate] [-a=<sourceTable>] [-b=<targetTable>]
                     [-c=<config>] [-p=<parallel>] [-s=<source>]
                     [--source_parallel=<sourceParallel>] [-t=<target>]
