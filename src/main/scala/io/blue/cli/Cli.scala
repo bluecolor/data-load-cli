@@ -41,6 +41,9 @@ class Cli {
   @Option(names = Array("-b", "--target_table"), description = Array("Target table to name"))
   var targetTable: String = _
 
+  @Option(names = Array("--truncate"), description = Array("Truncate table to name"))
+  var truncate: Boolean = _
+
   def printHelp() {
     CommandLine.usage(this, System.out)
   }

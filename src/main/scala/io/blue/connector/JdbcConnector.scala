@@ -45,4 +45,10 @@ class JdbcConnector extends Connector with LazyLogging {
     metadata
   }
 
+  def truncate (table: String) {
+    val connection = connect
+    connection.createStatement.executeUpdate(s"truncate table ${table}")
+    connection.close
+  }
+
 }

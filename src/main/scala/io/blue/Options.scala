@@ -11,7 +11,7 @@ class Options(var cli: Cli, var config: Config) {
     config.app.parallel
   }
 
-  def sourceParallel: Int = {
+  var sourceParallel: Int = {
     val name = this.cli.source
     if (cli.sourceParallel != null && cli.sourceParallel > 0) {
       cli.sourceParallel
@@ -21,7 +21,7 @@ class Options(var cli: Cli, var config: Config) {
     }
   }
 
-  def targetParallel: Int = {
+  var targetParallel: Int = {
     val name = this.cli.target
     if (cli.targetParallel != null && cli.targetParallel > 0) {
       cli.targetParallel

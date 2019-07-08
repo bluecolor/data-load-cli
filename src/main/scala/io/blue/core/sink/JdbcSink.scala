@@ -19,7 +19,7 @@ class JdbcSink extends Actor {
   var statement: PreparedStatement = _
   var batchIndex: Long = 0
 
-  val BATCH_SIZE = 1000 // todo: make this option
+  val BATCH_SIZE = 10000 // todo: make this option
 
   def receive = {
     case message: ProducersDone => onProducersDone
@@ -33,7 +33,7 @@ class JdbcSink extends Actor {
     this.metadata = params.metadata
     this.connector = params.connector
     this.connection = this.connector.connect
-    val columns = metadata.columns.mkString(",")
+    val columns = metadata.columns.map(_.name).mkString(",")
     val binds = metadata.columns.map(_ => "?").mkString(",")
     val query = s"""
       insert into ${metadata.table} (${columns}) values (${binds})
@@ -52,12 +52,13 @@ class JdbcSink extends Actor {
 
   def write(data: List[Object]) {
     for ((value, i) <- data.zipWithIndex) {
-      this.statement.setObject(i, value, metadata.columns(i).columnType)
+      this.statement.setObject(i+1, value, metadata.columns(i).columnType)
     }
     statement.addBatch
     batchIndex += 1
     if (batchIndex == BATCH_SIZE) {
       statement.executeBatch
+      batchIndex = 0
     }
   }
 }

@@ -43,6 +43,7 @@ object Config extends LazyLogging{
           c.url = connector.get("url").toString
           c.username = connector.get("username").toString
           c.password = connector.get("password").toString
+          c.driverClass = connector.get("driver_class").toString
           c
         case ConnectorType.FILE =>
           var c = new FileConnector
@@ -80,8 +81,6 @@ object Config extends LazyLogging{
           var connectors = result.get(name).asInstanceOf[java.util.Map[String, Object]]
           config.sourceConnectors = parseConnectors(connectors.get("source"))
           config.targetConnectors = parseConnectors(connectors.get("target"))
-          println(config.sourceConnectors)
-          println(config.targetConnectors)
       }
     }
     config

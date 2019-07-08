@@ -47,7 +47,7 @@ class Supervisor extends Actor {
     sourceMetadata = getMetadata(options.cli.sourceTable, sourceConnector)
     targetMetadata = getMetadata(options.cli.targetTable, targetConnector)
     if (sourceConnector.isInstanceOf[OracleRowidConnector]) {
-      options.parallel = sourceMetadata.asInstanceOf[OracleRowidSourceMetadata].ranges.length
+      options.sourceParallel = sourceMetadata.asInstanceOf[OracleRowidSourceMetadata].ranges.length
     }
   }
 
@@ -101,6 +101,13 @@ class Supervisor extends Actor {
   }
 
   def initSinks {
+    targetConnector match {
+      case c: JdbcConnector =>
+        if(options.cli.truncate) {
+          c.truncate(options.cli.targetTable)
+        }
+    }
+
     for (i <- 1 to options.targetParallel) {
       targetConnector match {
         case c: FileConnector =>
