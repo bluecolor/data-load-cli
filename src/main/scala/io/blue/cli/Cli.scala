@@ -35,13 +35,13 @@ class Cli {
   @Option(names = Array("--target_parallel"), description = Array("number of parallel target jobs"))
   var targetParallel: Integer = _
 
-  @Option(names = Array("-a", "--source_table"), description = Array("Source table to name"))
+  @Option(names = Array("-a", "--source_table"), description = Array("Source table name"))
   var sourceTable: String = _
 
-  @Option(names = Array("-b", "--target_table"), description = Array("Target table to name"))
+  @Option(names = Array("-b", "--target_table"), description = Array("Target table name"))
   var targetTable: String = _
 
-  @Option(names = Array("--truncate"), description = Array("Truncate table to name"))
+  @Option(names = Array("--truncate"), description = Array("Truncate target table"))
   var truncate: Boolean = _
 
   def printHelp() {
