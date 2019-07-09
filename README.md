@@ -22,3 +22,26 @@ lauda [-h] [--truncate] [-a=<sourceTable>] [-b=<targetTable>]
                           number of parallel target jobs
       --truncate          Truncate table to name
 ```
+
+example:
+
+
+
+```sh
+./lauda.sh \
+    --source=jdbc_source \
+    --target=oracle_1 \
+    --parallel=16 \
+    --source_table=lauda.demo_1 \
+    --target_table=lauda.lauda_target \
+    --truncate \
+    --filter="col_int>1000"
+```
+
+```sh
+./lauda.sh \
+    --source=jdbc_source \
+    --target=file_1 \
+    --parallel=4 \
+    --source_table=lauda.demo_1
+```
