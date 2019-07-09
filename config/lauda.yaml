@@ -10,6 +10,12 @@ connectors:
       password: lauda
       driver_class: oracle.jdbc.driver.OracleDriver
       parallel: 4
+    - name: jdbc_source
+      type: JDBC
+      url: jdbc:oracle:thin:@localhost:1530/orcl
+      username: lauda
+      password: lauda
+      driver_class: oracle.jdbc.driver.OracleDriver
   target:
     - name: file_1
       type: FILE
@@ -23,3 +29,5 @@ connectors:
       username: lauda
       password: lauda
       driver_class: oracle.jdbc.driver.OracleDriver
+      parallel: 1
+      batch_size: 10000

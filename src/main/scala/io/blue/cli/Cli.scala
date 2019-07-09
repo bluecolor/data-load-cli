@@ -44,6 +44,9 @@ class Cli {
   @Option(names = Array("--truncate"), description = Array("Truncate target table"))
   var truncate: Boolean = _
 
+  @Option(names = Array("-f", "--filter"), description = Array("Source filter"))
+  var filter: String = _
+
   def printHelp() {
     CommandLine.usage(this, System.out)
   }

@@ -1,0 +1,33 @@
+app:
+  parallel: 4
+
+connectors:
+  source:
+    - name: oracle_1
+      type: ORACLE_ROWID
+      url: jdbc:oracle:thin:@localhost:1530/orcl
+      username: lauda
+      password: lauda
+      driver_class: oracle.jdbc.driver.OracleDriver
+      parallel: 4
+    - name: jdbc_source
+      type: JDBC
+      url: jdbc:oracle:thin:@localhost:1530/orcl
+      username: lauda
+      password: lauda
+      driver_class: oracle.jdbc.driver.OracleDriver
+  target:
+    - name: file_1
+      type: FILE
+      path: /home/ceyhun/projects/lab/lauda/demo
+      field_delimiter: ";"
+      record_seperator: "\n"
+      parallel: 4
+    - name: jdbc_1
+      type: JDBC
+      url: jdbc:oracle:thin:@localhost:1530/orcl
+      username: lauda
+      password: lauda
+      driver_class: oracle.jdbc.driver.OracleDriver
+      parallel: 1
+      batch_size: 10000

@@ -1,6 +1,5 @@
 package io.blue.core.producer
 
-import com.typesafe.scalalogging._
 import akka.actor.{ActorRef, Actor, Props, ActorSystem}
 
 import io.blue.core.message._
@@ -9,7 +8,7 @@ import io.blue.connector.OracleRowidConnector
 import io.blue.core.metadata._
 
 
-class OracleRowidProducer extends Actor with LazyLogging {
+class OracleRowidProducer extends Producer with Actor {
 
   var connector: OracleRowidConnector = _
   var table: String = _
@@ -17,17 +16,6 @@ class OracleRowidProducer extends Actor with LazyLogging {
   var ranges: (String, String) = _
   var filter: String = _
   var columns: List[Column] = List()
-  var sinks: List[ActorRef] = List()
-
-  var sinkIndex: Int = -1
-
-  def nextSink: ActorRef = {
-    sinkIndex += 1
-    if (sinkIndex == sinks.length) {
-      sinkIndex = 0
-    }
-    sinks(sinkIndex)
-  }
 
   def receive = {
     case message: OracleRowidProducerParams => setParams(message)
@@ -42,10 +30,6 @@ class OracleRowidProducer extends Actor with LazyLogging {
     this.table = message.table
     this.ranges= message.ranges
     this.columns = message.columns
-  }
-
-  def registerSink(message: RegisterSink) {
-    sinks ::= message.sink
   }
 
   def getQuery: String = {

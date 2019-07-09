@@ -11,6 +11,7 @@ class JdbcConnector extends Connector with LazyLogging {
   var username: String = _
   var password: String = _
   var driverClass: String = _
+  var countMethod = "count(1)"
 
   def connect = {
     Class.forName(driverClass)
@@ -51,6 +52,20 @@ class JdbcConnector extends Connector with LazyLogging {
     val connection = connect
     connection.createStatement.executeUpdate(s"truncate table ${table}")
     connection.close
+  }
+
+  def count(table: String, filter: String) = {
+    logger.trace(s"Counting table ${table}...")
+    val connection = connect
+    val rs = connection.createStatement.executeQuery(s"""
+      select ${countMethod} from ${table}
+      where 1=1 ${if (filter == null) "" else "and " + filter }
+    """)
+    rs.next
+    val count = rs.getLong(1)
+    connection.close
+    logger.trace(s"Record count: ${count}")
+    count
   }
 
 }

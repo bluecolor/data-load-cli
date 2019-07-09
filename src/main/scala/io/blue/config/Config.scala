@@ -25,6 +25,11 @@ object Config extends LazyLogging{
     connectors.asInstanceOf[java.util.List[java.util.Map[String, Object]]].asScala.toList.map{ connector =>
       val connectorName = connector.get("name").toString
       val parallel = connector.get("parallel").asInstanceOf[Int]
+      val batchSize = if(connector.get("batch_size") != null) {
+        connector.get("batch_size").asInstanceOf[Int]
+      } else {
+        Constants.BATCH_SIZE
+      }
       connector.get("type").toString.toUpperCase match {
         case ConnectorType.ORACLE_ROWID =>
           var c = new OracleRowidConnector
@@ -35,6 +40,7 @@ object Config extends LazyLogging{
           c.username = connector.get("username").toString
           c.password = connector.get("password").toString
           c.driverClass = connector.get("driver_class").toString
+          c.batchSize = batchSize
           c
         case ConnectorType.JDBC =>
           var c = new JdbcConnector
@@ -44,6 +50,7 @@ object Config extends LazyLogging{
           c.username = connector.get("username").toString
           c.password = connector.get("password").toString
           c.driverClass = connector.get("driver_class").toString
+          c.batchSize = batchSize
           c
         case ConnectorType.FILE =>
           var c = new FileConnector
@@ -52,6 +59,7 @@ object Config extends LazyLogging{
           c.path = connector.get("path").toString
           c.fieldDelimiter = connector.get("field_delimiter").toString
           c.recordSeperator = connector.get("record_seperator").toString
+          c.batchSize = batchSize
           c
         case _ => throw new RuntimeException("Unsupported connector.")
       }

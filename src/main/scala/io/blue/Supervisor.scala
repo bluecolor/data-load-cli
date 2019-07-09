@@ -9,6 +9,7 @@ import io.blue.config.Config
 import io.blue.connector._
 import io.blue.core.producer._
 
+import me.tongfei.progressbar._
 import com.typesafe.scalalogging._
 import akka.actor.{Actor, ActorSystem, Props, ActorRef}
 
@@ -22,13 +23,25 @@ class Supervisor extends Actor with LazyLogging {
   var producers: Map[Int, (ActorRef, Status.Value)] = Map()
   var sinks: Map[Int, (ActorRef, Status.Value)] = Map()
 
+  var progressBar: ProgressBar = _
+
   def receive = {
     case options: Options => init(options)
     case ProducerDone(index: Int) => onProducerDone(index)
+    case SinkProgress(progress: Long) => onSinkProgress(progress)
     case SinkDone(index: Int) => onSinkDone(index)
     case message: CheckProgress => onCheckProgress
     case start: Start => run
     case _ => logger.error("Unknown message!")
+  }
+
+  def onSinkProgress(progress: Long) {
+    progressBar.stepBy(progress)
+  }
+
+  def initProgressBar {
+    progressBar = new ProgressBar("Lauda", sourceConnector.count(options.cli.sourceTable, options.cli.filter))
+    progressBar.start
   }
 
   def getMetadata(table: String, connector: Connector): Metadata = {
@@ -88,6 +101,7 @@ class Supervisor extends Actor with LazyLogging {
 
   def onCheckProgress = {
     if (isSinksDone) {
+      progressBar.stop
       context.system.terminate
     }
   }
@@ -104,6 +118,12 @@ class Supervisor extends Actor with LazyLogging {
           val params = OracleRowidProducerParams(i, options.cli.sourceTable, rowidRange, sourceMetadata.columns, c)
           producer ! params
         }
+      case c: JdbcConnector =>
+        options.sourceParallel = 1
+        val producer = context.actorOf(Props[JdbcProducer], name = s"JdbcProducer_1")
+        producers += (1 -> (producer, Status.Ready))
+        val params = JdbcProducerParams(1, options.cli.sourceTable, options.cli.filter, c)
+        producer ! params
     }
   }
 
@@ -115,6 +135,7 @@ class Supervisor extends Actor with LazyLogging {
         if(options.cli.truncate) {
           c.truncate(options.cli.targetTable)
         }
+      case _ =>
     }
 
     for (i <- 1 to options.targetParallel) {
@@ -153,6 +174,7 @@ class Supervisor extends Actor with LazyLogging {
     initProducers
     initSinks
     registerSinks
+    initProgressBar
     startProducers
   }
 

@@ -19,8 +19,6 @@ class JdbcSink extends Actor {
   var statement: PreparedStatement = _
   var batchIndex: Long = 0
 
-  val BATCH_SIZE = 10000 // todo: make this option
-
   def receive = {
     case message: ProducersDone => onProducersDone
     case params: JdbcSinkParams => setParams(params)
@@ -43,6 +41,7 @@ class JdbcSink extends Actor {
 
   def onProducersDone {
     if (batchIndex > 0) {
+      context.parent ! SinkProgress(batchIndex)
       statement.executeBatch
     }
     statement.close
@@ -56,7 +55,8 @@ class JdbcSink extends Actor {
     }
     statement.addBatch
     batchIndex += 1
-    if (batchIndex == BATCH_SIZE) {
+    if (batchIndex == this.connector.batchSize) {
+      context.parent ! SinkProgress(batchIndex)
       statement.executeBatch
       batchIndex = 0
     }
