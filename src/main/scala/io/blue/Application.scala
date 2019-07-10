@@ -17,6 +17,8 @@ import io.blue.core.message._
 
 object Application extends App with LazyLogging {
 
+  logger.debug("Starting application")
+
   val cli = Cli.parse(args)
   if (cli.helpRequested) {
     cli.printHelp

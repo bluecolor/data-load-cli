@@ -13,7 +13,7 @@ import io.blue.connector._
 object Config extends LazyLogging{
 
   private def parseApp(app: Object) : App = {
-    logger.trace("Parsing config [app]")
+    logger.debug("Parsing config [app]")
     val options = app.asInstanceOf[java.util.Map[String, Object]]
     var a = new App
     a.parallel = options.get("parallel").asInstanceOf[Int]
@@ -21,7 +21,7 @@ object Config extends LazyLogging{
   }
 
   private def parseConnectors(connectors: Object): List[Connector] = {
-    logger.trace("Parsing config [connectors]")
+    logger.debug("Parsing config [connectors]")
     connectors.asInstanceOf[java.util.List[java.util.Map[String, Object]]].asScala.toList.map{ connector =>
       val connectorName = connector.get("name").toString
       val parallel = connector.get("parallel").asInstanceOf[Int]
@@ -75,7 +75,7 @@ object Config extends LazyLogging{
   }
 
   def parse(configFile: File): Config = {
-    logger.trace(s"Parsing config file ${configFile}")
+    logger.debug(s"Parsing config file ${configFile}")
     var config = new Config
     val result = (new Yaml)
       .load(new FileInputStream(configFile))

@@ -18,8 +18,9 @@ unmanagedJars in Compile ++= (file("lib/") * "*.jar").classpath
 libraryDependencies ++= Seq(
   "org.yaml" % "snakeyaml" % "1.24",
   "info.picocli" % "picocli" % "4.0.0-beta-2",
-  "org.slf4j" % "slf4j-api" % "1.7.26",
-  "org.slf4j" % "slf4j-simple" % "1.7.26",
+  // "org.slf4j" % "slf4j-api" % "1.7.26",
+  // "org.slf4j" % "slf4j-simple" % "1.7.26",
+  "ch.qos.logback" % "logback-classic" % "1.1.2",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
   "me.tongfei" % "progressbar" % "0.6.0",
   "com.typesafe.akka" %% "akka-actor" % "2.5.23"

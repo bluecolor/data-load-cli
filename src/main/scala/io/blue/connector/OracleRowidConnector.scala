@@ -45,7 +45,7 @@ class OracleRowidConnector extends JdbcConnector with LazyLogging {
     var ownerName = table.split("\\.")(0)
     var tableName = table.split("\\.")(1)
     val query = getSplitQuery(ownerName, tableName, parallel)
-    logger.trace(query)
+    logger.debug(query)
     val connection = connect
     val rs = connection.createStatement.executeQuery(query)
     var ranges: List[(String, String)] = List()

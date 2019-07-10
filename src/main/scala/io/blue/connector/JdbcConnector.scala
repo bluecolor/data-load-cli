@@ -19,10 +19,10 @@ class JdbcConnector extends Connector with LazyLogging {
   }
 
   def getColumns(table: String): List[Column] = {
-    logger.trace(s"Finding all columns of the table ${table} ...")
+    logger.debug(s"Finding all columns of the table ${table} ...")
     val connection = connect
     var query = s"select * from ${table} where 1=2"
-    logger.trace(query)
+    logger.debug(query)
 
     val rs = connection.createStatement.executeQuery(query)
     val md = rs.getMetaData
@@ -34,9 +34,9 @@ class JdbcConnector extends Connector with LazyLogging {
       column.columnTypeName = md.getColumnTypeName(i)
       column
     }.toList
-    logger.trace("Done finding columns")
+    logger.debug("Done finding columns")
     connection.close
-    logger.trace(s"${columns.length} columns found")
+    logger.debug(s"${columns.length} columns found")
     columns
   }
 
@@ -48,14 +48,14 @@ class JdbcConnector extends Connector with LazyLogging {
   }
 
   def truncate (table: String) {
-    logger.trace(s"truncating target table ${table}...")
+    logger.debug(s"truncating target table ${table}...")
     val connection = connect
     connection.createStatement.executeUpdate(s"truncate table ${table}")
     connection.close
   }
 
   def count(table: String, filter: String) = {
-    logger.trace(s"Counting table ${table}...")
+    logger.debug(s"Counting table ${table}...")
     val connection = connect
     val rs = connection.createStatement.executeQuery(s"""
       select ${countMethod} from ${table}
@@ -64,7 +64,7 @@ class JdbcConnector extends Connector with LazyLogging {
     rs.next
     val count = rs.getLong(1)
     connection.close
-    logger.trace(s"Record count: ${count}")
+    logger.debug(s"Record count: ${count}")
     count
   }
 

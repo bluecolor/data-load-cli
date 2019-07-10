@@ -47,7 +47,7 @@ class JdbcProducer extends Producer with Actor {
 
   def run(query: String) {
     val connection = connector.connect
-    logger.trace(query)
+    logger.debug(query)
     val rs = connection.createStatement.executeQuery(query)
     var count = 0
     while (rs.next) {

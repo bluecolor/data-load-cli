@@ -55,7 +55,7 @@ class Supervisor extends Actor with LazyLogging {
   }
 
   def init(options: Options) {
-    logger.trace("Initializing options...")
+    logger.debug("Initializing options...")
     this.options = options
     sourceConnector = options.config.getSourceConnector(options.cli.source)
     targetConnector = options.config.getTargetConnector(options.cli.target)
@@ -64,16 +64,16 @@ class Supervisor extends Actor with LazyLogging {
     if (sourceConnector.isInstanceOf[OracleRowidConnector]) {
       options.sourceParallel = sourceMetadata.asInstanceOf[OracleRowidSourceMetadata].ranges.length
     }
-    logger.trace("Options initialized")
+    logger.debug("Options initialized")
   }
 
   def broadcastProducersDone {
-    logger.trace("Broadcasting done message to all sinks...")
+    logger.debug("Broadcasting done message to all sinks...")
     sinks.values.map(_._1).foreach(_ ! ProducersDone())
   }
 
   def onProducerDone(index: Int) {
-    logger.trace(s"Producer ${index} is done")
+    logger.debug(s"Producer ${index} is done")
     val (producer, _) =  producers(index)
     producers += (index -> (producer, Status.Done))
     if (isProducersDone) {
@@ -83,7 +83,7 @@ class Supervisor extends Actor with LazyLogging {
   }
 
   def onSinkDone(index: Int) {
-    logger.trace(s"Sink ${index} is done")
+    logger.debug(s"Sink ${index} is done")
     val (sink, _) =  sinks(index)
     sinks += (index -> (sink, Status.Done))
     self ! CheckProgress()
@@ -107,7 +107,7 @@ class Supervisor extends Actor with LazyLogging {
   }
 
   def initProducers {
-    logger.trace(s"Initializing producers")
+    logger.debug(s"Initializing producers")
     // can not parallize all producers
     sourceConnector match {
       case c: OracleRowidConnector =>
@@ -128,7 +128,7 @@ class Supervisor extends Actor with LazyLogging {
   }
 
   def initSinks {
-    logger.trace(s"Initializing sinks")
+    logger.debug(s"Initializing sinks")
 
     targetConnector match {
       case c: JdbcConnector =>
