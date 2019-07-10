@@ -131,7 +131,7 @@ class Supervisor extends Actor with LazyLogging {
           val producer = context.actorOf(Props[OracleHashProducer], name = s"OracleHashProducer_${i}")
           producers += (i -> (producer, Status.Ready))
           val hashId = sourceMetadata.asInstanceOf[OracleHashMetadata].hashes(i-1)
-          val params = OracleHashProducerParams(i, options.sourceParallel, options.cli.sourceTable, hashId, sourceMetadata.columns, c)
+          val params = OracleHashProducerParams(i, options.sourceParallel - 1, options.cli.sourceTable, hashId, sourceMetadata.columns, c)
           producer ! params
         }
       case c: JdbcConnector =>
