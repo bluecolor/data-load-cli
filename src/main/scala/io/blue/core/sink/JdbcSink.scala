@@ -10,14 +10,12 @@ import io.blue.connector.JdbcConnector
 import io.blue.core.message._
 
 
-class JdbcSink extends Actor {
+class JdbcSink extends Sink with Actor {
 
-  var index: Int = _
   var connector: JdbcConnector = _
   var metadata: Metadata = _
   var connection: java.sql.Connection = _
   var statement: PreparedStatement = _
-  var batchIndex: Long = 0
 
   def receive = {
     case message: ProducersDone => onProducersDone

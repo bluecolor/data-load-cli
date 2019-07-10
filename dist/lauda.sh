@@ -1,1 +1,1 @@
-java -Dlog4j.configuration=file:"./log.properties"  -jar lauda.jar $*
+java -Dlog4j.configuration=file:"./log.properties" -cp lib/*.jar  -jar lauda.jar $*

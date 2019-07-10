@@ -31,3 +31,11 @@ connectors:
       driver_class: oracle.jdbc.driver.OracleDriver
       parallel: 1
       batch_size: 10000
+    - name: hive_demo
+      type: JDBC
+      url: jdbc:hive2://<server>:<port10000>/<database>
+      username: lauda
+      password: lauda
+      driver_class: org.apache.hive.hiveDriver
+      parallel: 1
+      batch_size: 10000
