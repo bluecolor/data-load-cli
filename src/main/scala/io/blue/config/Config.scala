@@ -31,6 +31,17 @@ object Config extends LazyLogging{
         Constants.BATCH_SIZE
       }
       connector.get("type").toString.toUpperCase match {
+        case ConnectorType.ORACLE_HASH =>
+          var c = new OracleHashConnector
+          c.name = connectorName
+          c.parallel = parallel
+          c.connectorType = ConnectorType.ORACLE_HASH
+          c.url = connector.get("url").toString
+          c.username = connector.get("username").toString
+          c.password = connector.get("password").toString
+          c.driverClass = connector.get("driver_class").toString
+          c.batchSize = batchSize
+          c
         case ConnectorType.ORACLE_ROWID =>
           var c = new OracleRowidConnector
           c.name = connectorName

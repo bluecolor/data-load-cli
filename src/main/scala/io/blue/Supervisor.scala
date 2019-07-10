@@ -46,6 +46,8 @@ class Supervisor extends Actor with LazyLogging {
 
   def getMetadata(table: String, connector: Connector): Metadata = {
     connector match {
+      case c: OracleHashConnector=>
+        c.getMetadata(table, options.cli.parallel)
       case c: OracleRowidConnector =>
         c.getMetadata(table, options.cli.parallel)
       case c: JdbcConnector =>
@@ -61,9 +63,15 @@ class Supervisor extends Actor with LazyLogging {
     targetConnector = options.config.getTargetConnector(options.cli.target)
     sourceMetadata = getMetadata(options.cli.sourceTable, sourceConnector)
     targetMetadata = getMetadata(options.cli.targetTable, targetConnector)
+
+
+
     if (sourceConnector.isInstanceOf[OracleRowidConnector]) {
-      options.sourceParallel = sourceMetadata.asInstanceOf[OracleRowidSourceMetadata].ranges.length
+      options.sourceParallel = sourceMetadata.asInstanceOf[OracleRowidMetadata].ranges.length
+    } else if (sourceConnector.isInstanceOf[OracleHashConnector]) {
+      options.sourceParallel = sourceMetadata.asInstanceOf[OracleHashMetadata].hashes.length
     }
+
     logger.debug("Options initialized")
   }
 
@@ -114,8 +122,16 @@ class Supervisor extends Actor with LazyLogging {
         for (i <- 1 to options.sourceParallel) {
           val producer = context.actorOf(Props[OracleRowidProducer], name = s"OracleRowidProducer_${i}")
           producers += (i -> (producer, Status.Ready))
-          val rowidRange = sourceMetadata.asInstanceOf[OracleRowidSourceMetadata].ranges(i-1)
+          val rowidRange = sourceMetadata.asInstanceOf[OracleRowidMetadata].ranges(i-1)
           val params = OracleRowidProducerParams(i, options.cli.sourceTable, rowidRange, sourceMetadata.columns, c)
+          producer ! params
+        }
+      case c: OracleHashConnector =>
+        for (i <- 1 to options.sourceParallel) {
+          val producer = context.actorOf(Props[OracleHashProducer], name = s"OracleHashProducer_${i}")
+          producers += (i -> (producer, Status.Ready))
+          val hashId = sourceMetadata.asInstanceOf[OracleHashMetadata].hashes(i-1)
+          val params = OracleHashProducerParams(i, options.sourceParallel, options.cli.sourceTable, hashId, sourceMetadata.columns, c)
           producer ! params
         }
       case c: JdbcConnector =>
@@ -138,6 +154,7 @@ class Supervisor extends Actor with LazyLogging {
       case _ =>
     }
 
+    println(s"target parallel ${options.targetParallel}")
     for (i <- 1 to options.targetParallel) {
       targetConnector match {
         case c: FileConnector =>
@@ -166,7 +183,6 @@ class Supervisor extends Actor with LazyLogging {
     for ((producer, i) <- producers.values.map(_._1).zipWithIndex) {
       producer ! StartProducer()
       producers += (i+1 -> (producer, Status.Running))
-      sinks += (i+1 -> (sinks(i+1)._1, Status.Running))
     }
   }
 

@@ -35,7 +35,7 @@ class OracleRowidConnector extends JdbcConnector with LazyLogging {
                   WHERE segment_name = UPPER ('${tableName}')
                   AND owner = UPPER ('${ownerName}')
               ORDER BY block_id)),
-      (SELECT data_object_id
+      (SELECT /*+ parallel(16) */ data_object_id
           FROM all_objects
         WHERE object_name = UPPER ('${tableName}') AND owner = UPPER ('${ownerName}'))
     """
@@ -52,11 +52,12 @@ class OracleRowidConnector extends JdbcConnector with LazyLogging {
     while(rs.next) {
       ranges ::= (rs.getString(1), rs.getString(2))
     }
+    connection.close
     ranges
   }
 
-  def getMetadata(table: String, parallel: Int) : OracleRowidSourceMetadata = {
-    var metadata = new OracleRowidSourceMetadata
+  def getMetadata(table: String, parallel: Int) : OracleRowidMetadata = {
+    var metadata = new OracleRowidMetadata
     metadata.ranges = findRanges(table, parallel)
     metadata.table = table
     metadata.columns = getColumns(table)

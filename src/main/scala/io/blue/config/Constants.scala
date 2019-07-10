@@ -6,6 +6,7 @@ object Constants {
   val BATCH_SIZE = 1000
 
   object ConnectorType {
+    val ORACLE_HASH = "ORACLE_HASH"
     val ORACLE_ROWID = "ORACLE_ROWID"
     val JDBC = "JDBC"
     val FILE = "FILE"
