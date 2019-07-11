@@ -3,11 +3,11 @@ app:
 
 connectors:
   source:
-    - name: oracle_2
+    - name: x6
       type: ORACLE_HASH
-      url: jdbc:oracle:thin:@localhost:1530/orcl
-      username: lauda
-      password: lauda
+      url: jdbc:oracle:thin:@:1521/pdwh0
+      username: C_KERTI
+      password:
       driver_class: oracle.jdbc.driver.OracleDriver
       parallel: 4
     - name: oracle_1
@@ -24,7 +24,7 @@ connectors:
       password: lauda
       driver_class: oracle.jdbc.driver.OracleDriver
   target:
-    - name: file_1
+    - name: ubuntu
       type: FILE
       path: /home/ceyhun/projects/lab/lauda/demo
       field_delimiter: ";"

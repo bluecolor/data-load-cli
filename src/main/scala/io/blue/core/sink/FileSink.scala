@@ -34,8 +34,12 @@ class FileSink extends Sink with Actor {
   }
 
   def write(data: List[Object]) {
+
     try {
-      val record = s"${data.map(_.toString).mkString(connector.fieldDelimiter)}${connector.recordSeperator}"
+      val r = data.map{col: Object =>
+        if (col == null) { null } else { col.toString }
+      }
+      val record = s"${r.mkString(connector.fieldDelimiter)}${connector.recordSeperator}"
       this.writer.write(record)
       batchIndex += 1
       if (batchIndex == this.connector.batchSize) {
