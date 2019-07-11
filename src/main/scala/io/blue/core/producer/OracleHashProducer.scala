@@ -49,12 +49,19 @@ class OracleHashProducer extends Producer with Actor {
   def run(query: String) {
     val connection = connector.connect
     logger.debug(query)
-    val rs = connection.createStatement.executeQuery(query)
-    var count = 0
-    while (rs.next) {
-      nextSink ! Record((1 to rs.getMetaData.getColumnCount).map(rs.getObject(_)).toList)
-      count += 1
-    }
+    try{
+      val rs = connection.createStatement.executeQuery(query)
+      var count = 0
+      while (rs.next) {
+        nextSink ! Record((1 to rs.getMetaData.getColumnCount).map(rs.getObject(_)).toList)
+        count += 1
+      }
+    } catch {
+        case e: Exception =>
+          e.printStackTrace
+          System.exit(1)
+      }
+    connection.close
     context.parent ! ProducerDone(index)
   }
 
