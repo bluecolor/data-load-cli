@@ -37,7 +37,7 @@ class FileSink extends Sink with Actor {
 
     try {
       val r = data.map{col: Object =>
-        if (col == null) { null } else { col.toString }
+        if (col == null) { "" } else { col.toString }
       }
       val record = s"${r.mkString(connector.fieldDelimiter)}${connector.recordSeperator}"
       this.writer.write(record)
